@@ -585,67 +585,11 @@ public class Game extends Application {
         List<Rectangle> eatRectangles = new ArrayList<>();
 
         for (Rectangle OwnedRectangle : OwnedRectangles) {
-            currentPosition = (Position) OwnedRectangle.getUserData();
+//            currentPosition = (Position) OwnedRectangle.getUserData();
 
-            for (int i = 0; i < 2; i++) {
-                for (int j = 0; j < 2; j++) {
 
-                    if (i == 0) {//x
 
-                        if (j == 0) {//++
-
-                            Position p = (Position) OwnedRectangle.getUserData();
-                            p.setX(p.getX() + 200);
-                            lastPosition = p;
-
-                            if (isEatable()) {
-                                eatRectangles.add(OwnedRectangle);
-                            }
-
-                        } else if (j == 1) {//--
-
-                            Position p = (Position) OwnedRectangle.getUserData();
-                            p.setX(p.getX() - 200);
-                            lastPosition = p;
-
-                            if (isEatable()) {
-                                eatRectangles.add(OwnedRectangle);
-                            }
-                        }
-
-                    } else if (i == 1) {//y
-
-                        if (j == 0) {//++
-                            
-                            Position p = (Position) OwnedRectangle.getUserData();
-                            p.setX(p.getY() - 200);
-                            lastPosition = p;
-
-                            if (isEatable()) {
-                                eatRectangles.add(OwnedRectangle);
-                            }
-                            
-                        } else if (j == 1) {//--
-                            
-                            Position p = (Position) OwnedRectangle.getUserData();
-                            p.setX(p.getY() - 200);
-                            lastPosition = p;
-
-                            if (isEatable()) {
-                                eatRectangles.add(OwnedRectangle);
-                            }
-                        }
-                    }
-
-                }
-            }
-            
-            
-                    restPositions();
-
-//            lastPosition=
         }
-            System.out.println(eatRectangles.size());
 
 
     }
