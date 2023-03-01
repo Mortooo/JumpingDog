@@ -55,6 +55,7 @@ public class Game extends Application {
         launch(args);
     }
 //
+
     @Override
     public void start(Stage stage) throws IOException {
 
@@ -589,12 +590,63 @@ public class Game extends Application {
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < 2; j++) {
 
+                    if (i == 0) {//x
+
+                        if (j == 0) {//++
+
+                            Position p = (Position) OwnedRectangle.getUserData();
+                            p.setX(p.getX() + 200);
+                            lastPosition = p;
+
+                            if (isEatable()) {
+                                eatRectangles.add(OwnedRectangle);
+                            }
+
+                        } else if (j == 1) {//--
+
+                            Position p = (Position) OwnedRectangle.getUserData();
+                            p.setX(p.getX() - 200);
+                            lastPosition = p;
+
+                            if (isEatable()) {
+                                eatRectangles.add(OwnedRectangle);
+                            }
+                        }
+
+                    } else if (i == 1) {//y
+
+                        if (j == 0) {//++
+                            
+                            Position p = (Position) OwnedRectangle.getUserData();
+                            p.setX(p.getY() - 200);
+                            lastPosition = p;
+
+                            if (isEatable()) {
+                                eatRectangles.add(OwnedRectangle);
+                            }
+                            
+                        } else if (j == 1) {//--
+                            
+                            Position p = (Position) OwnedRectangle.getUserData();
+                            p.setX(p.getY() - 200);
+                            lastPosition = p;
+
+                            if (isEatable()) {
+                                eatRectangles.add(OwnedRectangle);
+                            }
+                        }
+                    }
+
                 }
             }
+            
+            
+                    restPositions();
+
 //            lastPosition=
         }
-        
-        restPositions();
+            System.out.println(eatRectangles.size());
+
 
     }
 
