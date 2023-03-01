@@ -1,6 +1,8 @@
 package game;
-//hello i did it 
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.animation.ScaleTransition;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -12,11 +14,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import static javafx.scene.input.KeyCode.SHIFT;
 import static javafx.scene.input.MouseButton.PRIMARY;
 import static javafx.scene.input.MouseButton.SECONDARY;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -36,12 +40,15 @@ public class Game extends Application {
 
     boolean isFirstPlayerTurn = true;//blue
     boolean dontMove = false;
+    boolean vsComputer = false;// computer play with green 
 
     ProgressBar blueProgressBar = new ProgressBar();
     ProgressBar greenProgressBar = new ProgressBar();
 
     Text firstPlayerName = new Text("Blue Player");
     Text secondPlayerName = new Text("Green Player");
+
+    Rectangle eaten = null;
 
     public static void main(String[] args) {
 
@@ -51,21 +58,106 @@ public class Game extends Application {
     @Override
     public void start(Stage stage) throws IOException {
 
-       
-        
-        Scene scene = new Scene(root, 500, 650, Color.SKYBLUE);
-        scene.getStylesheets().add(getClass().getResource("mainmenu.css").toExternalForm());
-        createGameBoard(root);
+        Scene scene = createMainBoard();
         stage.setScene(scene);
+        stage.resizableProperty().set(false);// prevent user from resizing screen 
         stage.show();
     }
 
-    @Override
-    public void init() {
+    /**
+     * this method create the main board and return it as Scene
+     *
+     * @return Scene
+     */
+    public Scene createMainBoard() {
+
+        Group root = new Group();
+        Scene scene = new Scene(root, 400, 550);
+        scene.getStylesheets().add(getClass().getResource("mainmenu.css").toExternalForm());// add the css file 
+
+        //create elements 
+        ImageView backgroun_img = new ImageView(new Image(getClass().getResourceAsStream("background.gif")));
+        VBox vBox = new VBox();
+        Button singlePlayer = new Button("Single Player");
+        Button MultiPlayer = new Button("Multi Player");
+        Button setting = new Button("settings");
+        Button about = new Button("about");
+        Button exit = new Button("exit");
+
+        //Determine properties
+        vBox.setSpacing(30);
+
+        //Determine the size
+        singlePlayer.setPrefSize(220, 50);
+        MultiPlayer.setPrefSize(220, 50);
+        setting.setPrefSize(220, 50);
+        about.setPrefSize(220, 50);
+        exit.setPrefSize(220, 50);
+
+        //Determine the Location on the pane
+        vBox.setLayoutX(90);
+        vBox.setLayoutY(60);
+
+        //Add to vbox
+        vBox.getChildren().add(singlePlayer);
+        vBox.getChildren().add(MultiPlayer);
+        vBox.getChildren().add(setting);
+        vBox.getChildren().add(about);
+        vBox.getChildren().add(exit);
+
+        //Add to the pane       
+        root.getChildren().add(backgroun_img);
+        root.getChildren().add(vBox);
+
+        //Add event Handler
+        MultiPlayer.setOnAction((t) -> {
+
+            //get players names
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setHeaderText("First Player Name");
+            dialog.showAndWait();
+            firstPlayerName.setText(dialog.getResult());
+            dialog.getEditor().setText("");
+            dialog.setHeaderText("second player name");
+            dialog.showAndWait();
+            secondPlayerName.setText(dialog.getResult());
+
+            //show game board
+            Stage stage = (Stage) MultiPlayer.getScene().getWindow();
+            stage.setScene(createGameBoard());
+            stage.resizableProperty().set(false);// prevent change size of window
+
+        });
+
+        singlePlayer.setOnAction((t) -> {
+
+            //get players names
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setHeaderText("Player Name");
+            dialog.showAndWait();
+            firstPlayerName.setText(dialog.getResult());
+            secondPlayerName.setText("Computer");
+            vsComputer = true;
+
+            //show game board
+            Stage stage = (Stage) MultiPlayer.getScene().getWindow();
+            stage.setScene(createGameBoard());
+            stage.resizableProperty().set(false);// prevent change size of window
+
+        });
+
+        exit.setOnAction((t) -> {
+            System.exit(0);
+        });// exit
+
+        return scene;
 
     }
 
-    public void createGameBoard(Group root) {
+    public Scene createGameBoard() {
+
+        Scene scene = new Scene(root, 500, 650);
+        scene.getStylesheets().add(getClass().getResource("mainmenu.css").toExternalForm());
 
         //create elements 
         ImageView backgroun_img = new ImageView(new Image(getClass().getResourceAsStream("background.gif")));
@@ -145,8 +237,18 @@ public class Game extends Application {
         shift_role.setOnAction((t) -> {//shifting role
 
             if (isFirstPlayerTurn) {
-                circle.setFill(Color.GREEN);
-                isFirstPlayerTurn = false;
+
+                if (vsComputer) {// if callange Computer
+
+                    computerRole();
+                    circle.setFill(Color.GREEN);
+                    isFirstPlayerTurn = false;
+
+                } else {
+                    circle.setFill(Color.GREEN);
+                    isFirstPlayerTurn = false;
+                }
+
             } else {
                 isFirstPlayerTurn = true;
                 circle.setFill(Color.BLUE);
@@ -157,6 +259,8 @@ public class Game extends Application {
 
         // draw board 
         drawBoard();
+
+        return scene;
 
     }
 
@@ -305,6 +409,8 @@ public class Game extends Application {
 
             } else if (isEatable()) {
 
+                eat();
+
                 System.out.println("is eatable");
                 cuRectangle.setFill(lastRectangle.getFill());
                 lastRectangle.setFill(Color.WHITE);
@@ -345,13 +451,14 @@ public class Game extends Application {
     }
 
     public boolean isEatable() {
-        boolean result = true;
 
-        boolean jumb = true;
-        boolean eat = true;
+        boolean result = true;// the final result if there is good move 
+
+        boolean jumb = true;// the eat move require jump
+        boolean eat = true;// the next rectangle is enamy rectangel 
+
         String direction = "";
 
-        Rectangle eaten = null;
         Rectangle lastRectangle = getitem(lastPosition);
 
         int C_X = currentPosition.getX();
@@ -364,7 +471,7 @@ public class Game extends Application {
             eaten = getitem(new Position(L_X, L_Y + 100));
 
         } else if (C_X == L_X && C_Y == L_Y - 200) {//up
-            System.out.println(getitem(new Position(L_X, L_Y)));
+
             eaten = getitem(new Position(L_X, L_Y - 100));
 
         } else if (C_X == L_X - 200 && C_Y == L_Y) {//left
@@ -383,34 +490,6 @@ public class Game extends Application {
         if (jumb) {
 
             if (!lastRectangle.getFill().equals(eaten.getFill()) || !eaten.getFill().equals(Color.WHITE)) {
-
-                // make effect while eating
-                ScaleTransition scaleTransition = new ScaleTransition();
-                scaleTransition.setNode(eaten);
-                scaleTransition.setDuration(Duration.millis(500));
-                scaleTransition.setCycleCount(2);
-                scaleTransition.setByX(-1);
-                scaleTransition.setByY(-1);
-                scaleTransition.setAutoReverse(true);
-                scaleTransition.play();
-
-                if (eaten.getFill().equals(Color.BLUE)) {
-                    blueProgressBar.setProgress(blueProgressBar.getProgress() - 0.083333333);
-                } else {//green
-                    greenProgressBar.setProgress(greenProgressBar.getProgress() - 0.083333333);
-
-                }
-
-                eaten.setFill(Color.WHITE);
-
-                if (blueProgressBar.getProgress() == 3.99999991462785E-9 || greenProgressBar.getProgress() == 3.99999991462785E-9) {
-
-                    new Alert(Alert.AlertType.INFORMATION, "game Finish!").showAndWait();
-
-                } else if (blueProgressBar.getProgress() == 0.08333333699999991 && greenProgressBar.getProgress() == 0.08333333699999991) {
-                    new Alert(Alert.AlertType.INFORMATION, "Draw!").showAndWait();
-
-                }
 
             } else {
                 result = false;
@@ -446,6 +525,77 @@ public class Game extends Application {
         }
 
         return result;
+    }
+
+    public void eat() {
+        // make effect while eating
+        ScaleTransition scaleTransition = new ScaleTransition();
+        scaleTransition.setNode(eaten);
+        scaleTransition.setDuration(Duration.millis(500));
+        scaleTransition.setCycleCount(2);
+        scaleTransition.setByX(-1);
+        scaleTransition.setByY(-1);
+        scaleTransition.setAutoReverse(true);
+        scaleTransition.play();
+
+        if (eaten.getFill().equals(Color.BLUE)) {
+            blueProgressBar.setProgress(blueProgressBar.getProgress() - 0.083333333);
+        } else {//green
+            greenProgressBar.setProgress(greenProgressBar.getProgress() - 0.083333333);
+
+        }
+
+        eaten.setFill(Color.WHITE);
+
+        isGameEnd();
+
+    }
+
+    public void isGameEnd() {
+        if (blueProgressBar.getProgress() == 3.99999991462785E-9 || greenProgressBar.getProgress() == 3.99999991462785E-9) {
+
+            new Alert(Alert.AlertType.INFORMATION, "game Finish!").showAndWait();
+
+        } else if (blueProgressBar.getProgress() == 0.08333333699999991 && greenProgressBar.getProgress() == 0.08333333699999991) {
+            new Alert(Alert.AlertType.INFORMATION, "Draw!").showAndWait();
+
+        }
+    }
+
+    public void computerRole() {// how computer will play "Green"
+
+        List<Rectangle> OwnedRectangles = new ArrayList<>();
+
+        for (Node node : root.getChildren()) {// filter regtangles 
+
+            if (node instanceof Rectangle) {
+
+                Rectangle rectangle = (Rectangle) node;
+
+                if (rectangle.getFill().equals(Color.GREEN)) {// if the regtangle is green it belong to computer
+
+                    OwnedRectangles.add(rectangle);
+                }
+
+            }
+        }
+
+        // check if the computer can eat 
+        List<Rectangle> eatRectangles = new ArrayList<>();
+
+        for (Rectangle OwnedRectangle : OwnedRectangles) {
+            currentPosition = (Position) OwnedRectangle.getUserData();
+
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2; j++) {
+
+                }
+            }
+//            lastPosition=
+        }
+        
+        restPositions();
+
     }
 
 }
