@@ -583,9 +583,12 @@ public class Game extends Application {
 
         // check if the computer can eat 
         List<Rectangle> eatRectangles = new ArrayList<>();
+        Position previous=null;
+        Position next=null;
 
         for (Rectangle OwnedRectangle : OwnedRectangles) {
-//            currentPosition = (Position) OwnedRectangle.getUserData();
+            previous = (Position) OwnedRectangle.getUserData();
+            
 
 
 
